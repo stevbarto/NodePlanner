@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNodes } from './hooks/useNodes'
 import { useCoverage } from './hooks/useCoverage'
 import { MapView } from './components/MapView'
@@ -9,6 +9,26 @@ export default function App() {
   const { nodes, selectedId, setSelectedId, addNode, updateNode, removeNode } = useNodes()
   const { coverage, analyzing, status, analyzeNode, analyzeAll, clearCoverage, dropCoverage } = useCoverage()
   const [placing, setPlacing] = useState(false)
+  const [hiddenCoverage, setHiddenCoverage] = useState<Set<string>>(new Set())
+
+  const anyCoverage = nodes.some(n => n.id in coverage)
+  const allHidden   = nodes.every(n => hiddenCoverage.has(n.id))
+
+  const toggleAllCoverage = useCallback(() => {
+    if (allHidden) {
+      setHiddenCoverage(new Set())
+    } else {
+      setHiddenCoverage(new Set(nodes.map(n => n.id)))
+    }
+  }, [allHidden, nodes])
+
+  const toggleCoverage = useCallback((id: string) => {
+    setHiddenCoverage(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }, [])
 
   const handleMapClick = useCallback((lat: number, lon: number) => {
     if (!placing) return
@@ -30,6 +50,17 @@ export default function App() {
     dropCoverage(id)
   }, [removeNode, dropCoverage])
 
+  useEffect(() => {
+    analyzeAll(nodes)
+  }, []) // empty deps — runs once on mount
+
+  // Button style based on state
+  const covBtnStyle = !anyCoverage
+    ? { ...btnStyle('#5A7A90', '#1E3448'), opacity: 0.4, cursor: 'not-allowed' as const }
+    : allHidden
+      ? btnStyle('#E8A838', '#7A5519')   // amber = hidden, click to show
+      : btnStyle('#48CAE4', '#1E3448')   // cyan = visible, click to hide
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
 
@@ -44,7 +75,17 @@ export default function App() {
         <button onClick={() => analyzeAll(nodes)} disabled={analyzing} style={btnStyle('#E8A838', '#7A5519')}>
           {analyzing ? 'Analyzing…' : '📡 Analyze All'}
         </button>
-        <button onClick={clearCoverage} style={btnStyle('#5A7A90', '#1E3448')}>✕ Clear</button>
+        <button
+          style={covBtnStyle}
+          disabled={!anyCoverage}
+          onClick={toggleAllCoverage}
+        >
+          {!anyCoverage
+            ? '👁 No Coverage Computed'
+            : allHidden
+              ? '👁 Show All Coverage'
+              : '👁 Hide All Coverage'}
+        </button>
 
         <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: '#5A7A90', marginLeft: 8 }}>
           {status}
@@ -62,17 +103,21 @@ export default function App() {
           nodes={nodes}
           selectedId={selectedId}
           placing={placing}
+          hiddenCoverage={hiddenCoverage}
+          coverage={coverage}
           onSelect={setSelectedId}
           onPlace={() => setPlacing(p => !p)}
           onUpdate={updateNode}
           onRemove={handleRemove}
           onAnalyze={analyzeNode}
+          onToggleCoverage={toggleCoverage}
         />
         <MapView
           nodes={nodes}
           coverage={coverage}
           selectedId={selectedId}
           placing={placing}
+          hiddenCoverage={hiddenCoverage}
           onNodeSelect={setSelectedId}
           onNodeMove={handleNodeMove}
           onMapClick={handleMapClick}

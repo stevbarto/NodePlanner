@@ -80,6 +80,7 @@ function NodeMarker({
 interface MapViewProps {
   nodes:      MeshNode[];
   coverage:   CoverageMap;
+  hiddenCoverage: Set<string>;
   selectedId: string | null;
   placing:    boolean;
   onNodeSelect: (id: string) => void;
@@ -88,7 +89,7 @@ interface MapViewProps {
 }
 
 export function MapView({
-  nodes, coverage, placing, onNodeSelect, onNodeMove, onMapClick,
+  nodes, coverage, placing, hiddenCoverage, onNodeSelect, onNodeMove, onMapClick,
 }: MapViewProps) {
   return (
     <div style={{ flex: 1, position: 'relative', cursor: placing ? 'crosshair' : 'default' }}>
@@ -114,7 +115,7 @@ export function MapView({
         {/* Coverage: viewshed polygon if available, theoretical circle as fallback */}
         {nodes.map(node => {
           const poly = coverage[node.id];
-          if (!poly) return null;
+          if (!poly || hiddenCoverage.has(node.id)) return null
 
           // Terrain coverage polygon
           if (poly.length > 0 && isTerrainAvailable()) {
