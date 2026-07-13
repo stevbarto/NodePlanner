@@ -50,6 +50,17 @@ export default function App() {
     dropCoverage(id)
   }, [removeNode, dropCoverage])
 
+  const handleUpdateNode = useCallback((id: string, patch: Partial<MeshNode>) => {
+  updateNode(id, patch)
+  // Auto-recompute when radio settings change via dropdown
+  const radioKeys: (keyof MeshNode)[] = ['loraPreset', 'freqMhz', 'txDbm', 'gainDbi']
+  const hasRadioChange = radioKeys.some(k => k in patch)
+  if (hasRadioChange) {
+    const node = nodes.find(n => n.id === id)
+    if (node) analyzeNode({ ...node, ...patch })
+  }
+}, [nodes, updateNode, analyzeNode])
+
   useEffect(() => {
     analyzeAll(nodes)
   }, []) // empty deps — runs once on mount
@@ -107,10 +118,11 @@ export default function App() {
           coverage={coverage}
           onSelect={setSelectedId}
           onPlace={() => setPlacing(p => !p)}
-          onUpdate={updateNode}
+          onUpdate={handleUpdateNode}
           onRemove={handleRemove}
           onAnalyze={analyzeNode}
           onToggleCoverage={toggleCoverage}
+          onDeselect={() => setSelectedId(null)}
         />
         <MapView
           nodes={nodes}

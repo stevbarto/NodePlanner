@@ -136,7 +136,7 @@ export function MapView({
             <Circle
               key={node.id}
               center={[node.lat, node.lon]}
-              radius={maxRangeM(node.hw)}
+              radius={maxRangeM(node)}
               pathOptions={{
                 color: node.color, weight: 1, opacity: 0.5,
                 fillColor: node.color, fillOpacity: 0.07,

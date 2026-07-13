@@ -6,7 +6,7 @@ import { elevAt } from './elevation';
 export type LatLonTuple = [number, number];
 
 export function computeViewshed(node: MeshNode, radials = 72, steps = 44): LatLonTuple[] {
-  const rangeM  = Math.min(maxRangeM(node.hw), 14000);
+  const rangeM = maxRangeM(node);
   const stepM   = rangeM / steps;
   const baseElev = elevAt(node.lat, node.lon) ?? 1380;
   const obsH    = baseElev + node.altM + node.antM;

@@ -1,6 +1,6 @@
 import React from 'react';
-import type { MeshNode, HardwareModel } from '../types/node';
-import { HW_SPECS } from '../types/node';
+import type { MeshNode, HardwareModel, LoraPreset } from '../types/node';
+import { HW_SPECS, LORA_PRESETS } from '../types/node';
 import { maxRangeM } from '../utils/linkBudget';
 
 const S: Record<string, React.CSSProperties> = {
@@ -9,29 +9,34 @@ const S: Record<string, React.CSSProperties> = {
     borderRight: '1px solid #1E3448', display: 'flex',
     flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, sans-serif',
   },
-  head:  { padding: '11px 14px 8px', borderBottom: '1px solid #1E3448' },
-  label: { fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: '#5A7A90', textTransform: 'uppercase', letterSpacing: '0.08em' },
-  list:  { flex: 1, overflowY: 'auto', padding: 6 },
-  name:  { fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 500, color: '#C8D8E8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  sub:   { fontSize: 9, color: '#5A7A90', marginTop: 1 },
-  badge: { fontSize: 9, padding: '0 4px', borderRadius: 3, fontFamily: 'JetBrains Mono, monospace', border: '1px solid #7A5519', color: '#E8A838', marginLeft: 'auto', flexShrink: 0 },
-  dp:      { padding: '12px 14px', borderTop: '1px solid #1E3448', overflowY: 'auto' },
-  dpName:  { fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 600, color: '#C8D8E8', marginBottom: 10 },
+  head:    { padding: '11px 14px 8px', borderBottom: '1px solid #1E3448' },
+  label:   { fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: '#5A7A90', textTransform: 'uppercase', letterSpacing: '0.08em' },
+  list:    { flex: 1, overflowY: 'auto', padding: 6 },
+  name:    { fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 500, color: '#C8D8E8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  sub:     { fontSize: 9, color: '#5A7A90', marginTop: 1 },
+  badge:   { fontSize: 9, padding: '0 4px', borderRadius: 3, fontFamily: 'JetBrains Mono, monospace', border: '1px solid #7A5519', color: '#E8A838', marginLeft: 'auto', flexShrink: 0 },
+  dp:      { flex: 1, overflowY: 'auto', padding: '12px 14px' },
+  dpName:  { fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 600, color: '#C8D8E8', marginBottom: 0, flex: 1 },
   metrics: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 },
   mVal:    { fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 600 },
   mLbl:    { fontSize: 9, color: '#5A7A90', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 1 },
+  divider: { border: 'none', borderTop: '1px solid #1E3448', margin: '10px 0' },
+  section: { fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: '#5A7A90', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 },
   fLbl:    { fontSize: 9, color: '#5A7A90', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3, fontFamily: 'JetBrains Mono, monospace' },
   input:   { width: '100%', background: '#0B1724', border: '1px solid #1E3448', color: '#C8D8E8', padding: '5px 8px', borderRadius: 4, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, marginBottom: 8 },
   select:  { width: '100%', background: '#0B1724', border: '1px solid #1E3448', color: '#C8D8E8', padding: '5px 8px', borderRadius: 4, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, marginBottom: 8, cursor: 'pointer' },
+  row2:    { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
+  presetNote: { fontSize: 9, color: '#5A7A90', marginBottom: 8, fontFamily: 'JetBrains Mono, monospace' },
   btnAmber: { width: '100%', padding: 7, borderRadius: 5, background: 'rgba(232,168,56,0.1)', border: '1px solid #7A5519', color: '#E8A838', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, cursor: 'pointer', marginTop: 4 },
   btnRed:   { width: '100%', padding: 7, borderRadius: 5, background: 'transparent', border: '1px solid #522', color: '#E74C3C', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, cursor: 'pointer', marginTop: 4 },
   btnGhost: { width: '100%', padding: 7, borderRadius: 5, background: 'transparent', border: '1px solid #1E3448', color: '#5A7A90', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, cursor: 'pointer', marginTop: 4 },
+  backBtn:  { background: 'transparent', border: '1px solid #1E3448', color: '#C8D8E8', cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, lineHeight: '1', padding: '3px 8px', borderRadius: 4, flexShrink: 0 },
 };
 
-const row = (sel: boolean): React.CSSProperties => ({
+const row = (): React.CSSProperties => ({
   padding: '8px 10px', borderRadius: 5, cursor: 'pointer',
-  border: `1px solid ${sel ? '#48CAE4' : 'transparent'}`,
-  background: sel ? 'rgba(72,202,228,0.07)' : 'transparent',
+  border: '1px solid transparent',
+  background: 'transparent',
   marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8, transition: 'all .12s',
 });
 
@@ -65,6 +70,7 @@ interface SidebarProps {
   hiddenCoverage:   Set<string>;
   coverage:         Record<string, unknown>;
   onSelect:         (id: string) => void;
+  onDeselect:       () => void;
   onPlace:          () => void;
   onUpdate:         (id: string, patch: Partial<MeshNode>) => void;
   onRemove:         (id: string) => void;
@@ -74,7 +80,7 @@ interface SidebarProps {
 
 export function Sidebar({
   nodes, selectedId, placing, hiddenCoverage, coverage,
-  onSelect, onPlace, onUpdate, onRemove, onAnalyze, onToggleCoverage,
+  onSelect, onDeselect, onPlace, onUpdate, onRemove, onAnalyze, onToggleCoverage,
 }: SidebarProps) {
   const selected = nodes.find(n => n.id === selectedId) ?? null;
 
@@ -85,15 +91,11 @@ export function Sidebar({
 
     if (!hasCoverage) {
       return (
-        <button
-          style={{ ...S.btnGhost, opacity: 0.4, cursor: 'not-allowed' }}
-          disabled
-        >
+        <button style={{ ...S.btnGhost, opacity: 0.4, cursor: 'not-allowed' }} disabled>
           👁 No Coverage Computed
         </button>
       );
     }
-
     if (isHidden) {
       return (
         <button
@@ -104,7 +106,6 @@ export function Sidebar({
         </button>
       );
     }
-
     return (
       <button
         style={{ ...S.btnGhost, color: '#48CAE4', borderColor: '#48CAE4' }}
@@ -115,45 +116,37 @@ export function Sidebar({
     );
   };
 
+  const headLabel = selected ? selected.name : 'Network Nodes';
+
   return (
     <div style={S.sidebar}>
-      <div style={S.head}><div style={S.label}>Network Nodes</div></div>
 
-      <div style={S.list}>
-        {nodes.map(n => (
-          <div key={n.id} style={row(n.id === selectedId)} onClick={() => onSelect(n.id)}>
-            <div style={dot(n.color, n.planned)} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={S.name}>{n.name}</div>
-              <div style={S.sub}>
-                {HW_SPECS[n.hw].name} · {(maxRangeM(n.hw) / 1000).toFixed(0)} km max
-              </div>
-            </div>
-            {n.planned && <div style={S.badge}>PLAN</div>}
-            <div style={covDot(n.id, coverage, hiddenCoverage)} />
-          </div>
-        ))}
+      {/* ── Sidebar header ── */}
+      <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: 8 }}>
+        {selected && (
+          <button style={S.backBtn} onClick={onDeselect} title="Back to node list">
+            ←
+          </button>
+        )}
+        <div style={{ ...S.label, margin: 0 }}>{headLabel}</div>
       </div>
 
-      <button style={addBtn(placing)} onClick={onPlace}>
-        {placing ? '× Cancel — click map to place' : '+ Add Planned Node'}
-      </button>
-
-      {selected && (
+      {selected ? (
+        /* ══════════════════════════════════════
+           DETAIL VIEW
+        ══════════════════════════════════════ */
         <div style={S.dp}>
-          <div style={S.dpName} title={selected.id}>{selected.name}</div>
 
-          <div style={S.metrics}>
+          {/* ── Stats ── */}
+          <div style={{ ...S.metrics, marginTop: 4 }}>
             <div>
               <div style={{ ...S.mVal, color: '#48CAE4' }}>
-                {(maxRangeM(selected.hw) / 1000).toFixed(0)} km
+                {(maxRangeM(selected) / 1000).toFixed(1)} km
               </div>
               <div style={S.mLbl}>Theo. range</div>
             </div>
             <div>
-              <div style={{ ...S.mVal, color: '#C8D8E8' }}>
-                {HW_SPECS[selected.hw].txDbm} dBm
-              </div>
+              <div style={{ ...S.mVal, color: '#C8D8E8' }}>{selected.txDbm} dBm</div>
               <div style={S.mLbl}>TX power</div>
             </div>
             <div>
@@ -168,6 +161,11 @@ export function Sidebar({
             </div>
           </div>
 
+          <hr style={S.divider} />
+
+          {/* ── Identity ── */}
+          <div style={S.section}>Identity</div>
+
           <div style={S.fLbl}>Name</div>
           <input
             style={S.input}
@@ -179,34 +177,145 @@ export function Sidebar({
           <select
             style={S.select}
             value={selected.hw}
-            onChange={e => onUpdate(selected.id, { hw: e.target.value as HardwareModel })}
+            onChange={e => {
+              const hw   = e.target.value as HardwareModel;
+              const spec = HW_SPECS[hw];
+              onUpdate(selected.id, { hw, txDbm: spec.txDbm, gainDbi: spec.gainDbi });
+            }}
           >
             {(Object.keys(HW_SPECS) as HardwareModel[]).map(k => (
               <option key={k} value={k}>{HW_SPECS[k].name}</option>
             ))}
           </select>
 
-          <div style={S.fLbl}>Antenna height (m)</div>
-          <input
-            style={S.input}
-            type="number"
-            min={0}
-            max={100}
-            value={selected.antM}
-            onChange={e => onUpdate(selected.id, { antM: +e.target.value })}
-          />
+          <hr style={S.divider} />
 
+          {/* ── Radio config ── */}
+          <div style={S.section}>Radio Config</div>
+
+          <div style={S.fLbl}>LoRa Preset</div>
+          <select
+            style={S.select}
+            value={selected.loraPreset}
+            onChange={e => onUpdate(selected.id, { loraPreset: e.target.value as LoraPreset })}
+          >
+            {(Object.keys(LORA_PRESETS) as LoraPreset[]).map(k => (
+              <option key={k} value={k}>{LORA_PRESETS[k].name}</option>
+            ))}
+          </select>
+          <div style={S.presetNote}>
+            {LORA_PRESETS[selected.loraPreset].note}
+          </div>
+
+          <div style={S.fLbl}>Region Frequency (MHz)</div>
+          <select
+            style={S.select}
+            value={selected.freqMhz}
+            onChange={e => onUpdate(selected.id, { freqMhz: +e.target.value })}
+          >
+            <option value={915}>915 MHz — US / CA / AU</option>
+            <option value={868}>868 MHz — EU</option>
+            <option value={433}>433 MHz — Asia / EU alternate</option>
+          </select>
+
+          <hr style={S.divider} />
+
+          {/* ── Antenna & placement ── */}
+          <div style={S.section}>Antenna & Placement</div>
+
+          <div style={S.row2}>
+            <div>
+              <div style={S.fLbl}>Ant. height (m)</div>
+              <input
+                style={S.input}
+                type="number" min={0} max={100}
+                value={selected.antM}
+                onChange={e => onUpdate(selected.id, { antM: +e.target.value })}
+                onBlur={() => onAnalyze(selected)}
+              />
+            </div>
+            <div>
+              <div style={S.fLbl}>Ground offset (m)</div>
+              <input
+                style={S.input}
+                type="number" min={0} max={500}
+                value={selected.altM}
+                onChange={e => onUpdate(selected.id, { altM: +e.target.value })}
+                onBlur={() => onAnalyze(selected)}
+              />
+            </div>
+          </div>
+
+          <hr style={S.divider} />
+
+          {/* ── Custom TX / gain ── */}
+          <div style={S.section}>Custom TX / Gain</div>
+
+          <div style={S.row2}>
+            <div>
+              <div style={S.fLbl}>TX Power (dBm)</div>
+              <input
+                style={S.input}
+                type="number" min={1} max={selected.maxTxDbm}
+                value={selected.txDbm}
+                onChange={e => onUpdate(selected.id, { txDbm: +e.target.value })}
+                onBlur={() => onAnalyze(selected)}
+              />
+            </div>
+            <div>
+              <div style={S.fLbl}>Ant. Gain (dBi)</div>
+              <input
+                style={S.input}
+                type="number" min={0} max={20} step={0.25}
+                value={selected.gainDbi}
+                onChange={e => onUpdate(selected.id, { gainDbi: +e.target.value })}
+                onBlur={() => onAnalyze(selected)}
+              />
+            </div>
+          </div>
+
+          <hr style={S.divider} />
+
+          {/* ── Actions ── */}
           <CoverageToggleButton />
 
           <button style={S.btnAmber} onClick={() => onAnalyze(selected)}>
             📡 Recompute Coverage
           </button>
 
-          <button style={S.btnRed} onClick={() => onRemove(selected.id)}>
+          <button style={S.btnRed} onClick={() => { onRemove(selected.id); onDeselect(); }}>
             ✕ Remove Node
           </button>
+
         </div>
+
+      ) : (
+        /* ══════════════════════════════════════
+           LIST VIEW
+        ══════════════════════════════════════ */
+        <>
+          <div style={S.list}>
+            {nodes.map(n => (
+              <div key={n.id} style={row()} onClick={() => onSelect(n.id)}>
+                <div style={dot(n.color, n.planned)} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={S.name}>{n.name}</div>
+                  <div style={S.sub}>
+                    {HW_SPECS[n.hw].name} · {(maxRangeM(n) / 1000).toFixed(1)} km max
+                  </div>
+                </div>
+                {n.planned && <div style={S.badge}>PLAN</div>}
+                <div style={covDot(n.id, coverage, hiddenCoverage)} />
+              </div>
+            ))}
+          </div>
+
+          <button style={addBtn(placing)} onClick={onPlace}>
+            {placing ? '× Cancel — click map to place' : '+ Add Planned Node'}
+          </button>
+        </>
       )}
+
     </div>
   );
 }

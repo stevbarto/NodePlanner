@@ -1,15 +1,20 @@
-import { HW_SPECS } from '../types/node';
-import type { HardwareModel } from '../types/node';
+import type { MeshNode, LoraPreset } from '../types/node';
+import { LORA_PRESETS } from '../types/node';
 
-// Meshtastic LongFast preset: SF11 BW250 @ 915 MHz
-const RX_SENS_DBM = -134.5;
-const FREQ_HZ     = 915e6;
-const C           = 3e8;
+const C = 3e8;
 
-export function maxRangeM(hw: HardwareModel): number {
-  const spec   = HW_SPECS[hw];
-  const eirp   = spec.txDbm + spec.gainDbi;
-  const budget = eirp - RX_SENS_DBM;
-  const wl     = C / FREQ_HZ;
-  return Math.min((wl / (4 * Math.PI)) * Math.pow(10, budget / 20), 22000);
+// Free-space path loss range from full link budget.
+// Now uses per-node frequency, LoRa preset sensitivity,
+// and user-editable TX power + antenna gain.
+export function maxRangeM(node: MeshNode): number {
+  const rxSens    = LORA_PRESETS[node.loraPreset].rxSensDbm;
+  const freqHz    = node.freqMhz * 1e6;
+  const eirp      = node.txDbm + node.gainDbi;
+  const FADE_MARGIN_DB = 25; // realistic loss: foliage, cable, polarization
+  const budget    = eirp - rxSens - FADE_MARGIN_DB;
+  const wl        = C / freqHz;
+  return Math.min((wl / (4 * Math.PI)) * Math.pow(10, budget / 20), 80000);
 }
+
+// Expose preset list for UI use
+export type { LoraPreset };
