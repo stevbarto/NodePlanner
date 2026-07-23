@@ -27,7 +27,6 @@ function makeNode(
     id, name, lat, lon, altM, antM, hw, planned, color,
     freqMhz, loraPreset,
     txDbm:   spec.txDbm,
-    maxTxDbm: spec.maxTxDbm,
     gainDbi: spec.gainDbi,
   };
 }
@@ -56,7 +55,7 @@ function saveSaved(nodes: MeshNode[]): void {
 
 export function useNodes() {
   // Load from localStorage on first mount, fall back to defaults
-  const [nodes, setNodes] = useState<MeshNode[]>(() => loadSaved() ?? DEFAULTS);
+  const [nodes, setNodes] = useState<MeshNode[]>(() => loadSaved() ?? []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Persist to localStorage whenever nodes change

@@ -16,7 +16,6 @@ const S: Record<string, React.CSSProperties> = {
   sub:     { fontSize: 9, color: '#5A7A90', marginTop: 1 },
   badge:   { fontSize: 9, padding: '0 4px', borderRadius: 3, fontFamily: 'JetBrains Mono, monospace', border: '1px solid #7A5519', color: '#E8A838', marginLeft: 'auto', flexShrink: 0 },
   dp:      { flex: 1, overflowY: 'auto', padding: '12px 14px' },
-  dpName:  { fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 600, color: '#C8D8E8', marginBottom: 0, flex: 1 },
   metrics: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 },
   mVal:    { fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 600 },
   mLbl:    { fontSize: 9, color: '#5A7A90', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 1 },
@@ -24,9 +23,11 @@ const S: Record<string, React.CSSProperties> = {
   section: { fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: '#5A7A90', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 },
   fLbl:    { fontSize: 9, color: '#5A7A90', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3, fontFamily: 'JetBrains Mono, monospace' },
   input:   { width: '100%', background: '#0B1724', border: '1px solid #1E3448', color: '#C8D8E8', padding: '5px 8px', borderRadius: 4, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, marginBottom: 8 },
+  inputDisabled: { width: '100%', background: '#0B1724', border: '1px solid #1E3448', color: '#3A5A70', padding: '5px 8px', borderRadius: 4, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, marginBottom: 4, cursor: 'not-allowed', opacity: 0.5 },
   select:  { width: '100%', background: '#0B1724', border: '1px solid #1E3448', color: '#C8D8E8', padding: '5px 8px', borderRadius: 4, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, marginBottom: 8, cursor: 'pointer' },
   row2:    { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
-  presetNote: { fontSize: 9, color: '#5A7A90', marginBottom: 8, fontFamily: 'JetBrains Mono, monospace' },
+  note:    { fontSize: 9, color: '#5A7A90', marginBottom: 8, fontFamily: 'JetBrains Mono, monospace', lineHeight: '1.4' },
+  noteWarn: { fontSize: 9, color: '#E8A838', marginBottom: 8, fontFamily: 'JetBrains Mono, monospace', lineHeight: '1.4' },
   btnAmber: { width: '100%', padding: 7, borderRadius: 5, background: 'rgba(232,168,56,0.1)', border: '1px solid #7A5519', color: '#E8A838', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, cursor: 'pointer', marginTop: 4 },
   btnRed:   { width: '100%', padding: 7, borderRadius: 5, background: 'transparent', border: '1px solid #522', color: '#E74C3C', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, cursor: 'pointer', marginTop: 4 },
   btnGhost: { width: '100%', padding: 7, borderRadius: 5, background: 'transparent', border: '1px solid #1E3448', color: '#5A7A90', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, cursor: 'pointer', marginTop: 4 },
@@ -35,8 +36,7 @@ const S: Record<string, React.CSSProperties> = {
 
 const row = (): React.CSSProperties => ({
   padding: '8px 10px', borderRadius: 5, cursor: 'pointer',
-  border: '1px solid transparent',
-  background: 'transparent',
+  border: '1px solid transparent', background: 'transparent',
   marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8, transition: 'all .12s',
 });
 
@@ -83,12 +83,12 @@ export function Sidebar({
   onSelect, onDeselect, onPlace, onUpdate, onRemove, onAnalyze, onToggleCoverage,
 }: SidebarProps) {
   const selected = nodes.find(n => n.id === selectedId) ?? null;
+  const hwSpec   = selected ? HW_SPECS[selected.hw] : null;
 
   const CoverageToggleButton = () => {
     if (!selected) return null;
     const hasCoverage = selected.id in coverage;
     const isHidden    = hiddenCoverage.has(selected.id);
-
     if (!hasCoverage) {
       return (
         <button style={{ ...S.btnGhost, opacity: 0.4, cursor: 'not-allowed' }} disabled>
@@ -116,22 +116,22 @@ export function Sidebar({
     );
   };
 
-  const headLabel = selected ? selected.name : 'Network Nodes';
-
   return (
     <div style={S.sidebar}>
 
-      {/* ── Sidebar header ── */}
+      {/* ── Header ── */}
       <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: 8 }}>
         {selected && (
           <button style={S.backBtn} onClick={onDeselect} title="Back to node list">
             ←
           </button>
         )}
-        <div style={{ ...S.label, margin: 0 }}>{headLabel}</div>
+        <div style={{ ...S.label, margin: 0 }}>
+          {selected ? selected.name : 'Network Nodes'}
+        </div>
       </div>
 
-      {selected ? (
+      {selected && hwSpec ? (
         /* ══════════════════════════════════════
            DETAIL VIEW
         ══════════════════════════════════════ */
@@ -180,13 +180,21 @@ export function Sidebar({
             onChange={e => {
               const hw   = e.target.value as HardwareModel;
               const spec = HW_SPECS[hw];
-              onUpdate(selected.id, { hw, txDbm: spec.txDbm, gainDbi: spec.gainDbi });
+              // Reset TX and gain to new hardware defaults when switching
+              onUpdate(selected.id, {
+                hw,
+                txDbm:   spec.txDbm,
+                gainDbi: spec.gainDbi,
+              });
             }}
           >
             {(Object.keys(HW_SPECS) as HardwareModel[]).map(k => (
               <option key={k} value={k}>{HW_SPECS[k].name}</option>
             ))}
           </select>
+
+          {/* Hardware notes */}
+          <div style={S.note}>{hwSpec.notes}</div>
 
           <hr style={S.divider} />
 
@@ -203,9 +211,7 @@ export function Sidebar({
               <option key={k} value={k}>{LORA_PRESETS[k].name}</option>
             ))}
           </select>
-          <div style={S.presetNote}>
-            {LORA_PRESETS[selected.loraPreset].note}
-          </div>
+          <div style={S.note}>{LORA_PRESETS[selected.loraPreset].note}</div>
 
           <div style={S.fLbl}>Region Frequency (MHz)</div>
           <select
@@ -231,7 +237,7 @@ export function Sidebar({
                 type="number" min={0} max={100}
                 value={selected.antM}
                 onChange={e => onUpdate(selected.id, { antM: +e.target.value })}
-                onBlur={() => onAnalyze(selected)}
+                onBlur={e => onAnalyze({ ...selected, antM: +e.target.value })}
               />
             </div>
             <div>
@@ -241,36 +247,60 @@ export function Sidebar({
                 type="number" min={0} max={500}
                 value={selected.altM}
                 onChange={e => onUpdate(selected.id, { altM: +e.target.value })}
-                onBlur={() => onAnalyze(selected)}
+                onBlur={e => onAnalyze({ ...selected, altM: +e.target.value })}
               />
             </div>
           </div>
 
           <hr style={S.divider} />
 
-          {/* ── Custom TX / gain ── */}
-          <div style={S.section}>Custom TX / Gain</div>
+          {/* ── Custom TX / Gain ── */}
+          <div style={S.section}>TX / Antenna Gain</div>
 
           <div style={S.row2}>
             <div>
               <div style={S.fLbl}>TX Power (dBm)</div>
               <input
                 style={S.input}
-                type="number" min={1} max={selected.maxTxDbm}
+                type="number"
+                min={1}
+                max={hwSpec.maxTxDbm}
                 value={selected.txDbm}
-                onChange={e => onUpdate(selected.id, { txDbm: +e.target.value })}
-                onBlur={() => onAnalyze(selected)}
+                onChange={e => {
+                  // Clamp to hardware ceiling
+                  const val = Math.min(+e.target.value, hwSpec.maxTxDbm);
+                  onUpdate(selected.id, { txDbm: val });
+                }}
+                onBlur={e => {
+                  const val = Math.min(+e.target.value, hwSpec.maxTxDbm);
+                  onAnalyze({ ...selected, txDbm: val });
+                }}
               />
+              {selected.txDbm >= hwSpec.maxTxDbm && (
+                <div style={S.noteWarn}>At hardware maximum</div>
+              )}
             </div>
             <div>
               <div style={S.fLbl}>Ant. Gain (dBi)</div>
-              <input
-                style={S.input}
-                type="number" min={0} max={20} step={0.25}
-                value={selected.gainDbi}
-                onChange={e => onUpdate(selected.id, { gainDbi: +e.target.value })}
-                onBlur={() => onAnalyze(selected)}
-              />
+              {hwSpec.externalAntenna ? (
+                <input
+                  style={S.input}
+                  type="number" min={0} max={20} step={0.25}
+                  value={selected.gainDbi}
+                  onChange={e => onUpdate(selected.id, { gainDbi: +e.target.value })}
+                  onBlur={e => onAnalyze({ ...selected, gainDbi: +e.target.value })}
+                />
+              ) : (
+                <>
+                  <input
+                    style={S.inputDisabled}
+                    type="number"
+                    value={selected.gainDbi}
+                    disabled
+                  />
+                  <div style={S.noteWarn}>Internal antenna — fixed by hardware</div>
+                </>
+              )}
             </div>
           </div>
 
@@ -295,19 +325,39 @@ export function Sidebar({
         ══════════════════════════════════════ */
         <>
           <div style={S.list}>
-            {nodes.map(n => (
-              <div key={n.id} style={row()} onClick={() => onSelect(n.id)}>
-                <div style={dot(n.color, n.planned)} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={S.name}>{n.name}</div>
-                  <div style={S.sub}>
-                    {HW_SPECS[n.hw].name} · {(maxRangeM(n) / 1000).toFixed(1)} km max
-                  </div>
+            {nodes.length === 0 ? (
+              <div style={{
+                padding: '24px 16px',
+                textAlign: 'center' as const,
+                color: '#5A7A90',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 11,
+                lineHeight: '1.6',
+              }}>
+                <div style={{ fontSize: 28, marginBottom: 12 }}>📡</div>
+                <div style={{ color: '#C8D8E8', marginBottom: 6, fontWeight: 600 }}>
+                  No nodes yet
                 </div>
-                {n.planned && <div style={S.badge}>PLAN</div>}
-                <div style={covDot(n.id, coverage, hiddenCoverage)} />
+                <div style={{ fontSize: 10 }}>
+                  Click <span style={{ color: '#E8A838' }}>+ Add Planned Node</span> below
+                  or click anywhere on the map to place your first node.
+                </div>
               </div>
-            ))}
+            ) : (
+              nodes.map(n => (
+                <div key={n.id} style={row()} onClick={() => onSelect(n.id)}>
+                  <div style={dot(n.color, n.planned)} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={S.name}>{n.name}</div>
+                    <div style={S.sub}>
+                      {HW_SPECS[n.hw].name} · {(maxRangeM(n) / 1000).toFixed(1)} km max
+                    </div>
+                  </div>
+                  {n.planned && <div style={S.badge}>PLAN</div>}
+                  <div style={covDot(n.id, coverage, hiddenCoverage)} />
+                </div>
+              ))
+            )}
           </div>
 
           <button style={addBtn(placing)} onClick={onPlace}>

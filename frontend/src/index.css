@@ -1,4 +1,8 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
 
 body {
   background: #0B1724;
@@ -9,7 +13,9 @@ body {
 }
 
 /* Slightly darken the topo tiles */
-.leaflet-tile-pane { filter: brightness(0.82) saturate(0.85); }
+.leaflet-tile-pane { 
+  filter: brightness(0.82) saturate(0.85); 
+}
 
 /* Leaflet zoom control dark theme */
 .leaflet-control-zoom a {
@@ -17,4 +23,10 @@ body {
   color: #C8D8E8 !important;
   border-color: #1E3448 !important;
 }
-.leaflet-control-zoom a:hover { background: #1E3448 !important; }
+.leaflet-control-zoom a:hover { 
+  background: #1E3448 !important; 
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

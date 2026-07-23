@@ -1,50 +1,58 @@
-export type HardwareModel = 'HELTEC_V3' | 'TBEAM' | 'RAK4631' | 'SENSECAP' | 'GENERIC';
+export type HardwareModel = 'HELTEC_V3' | 'TBEAM' | 'RAK4631' | 'SENSECAP' | 'HELTEC_V2' | 'TBEAM_S3' | 'GENERIC';
 
-// export const HW_SPECS: Record<HardwareModel, { name: string; txDbm: number; gainDbi: number }> = {
-//   HELTEC_V3: { name: 'Heltec V3',         txDbm: 20, gainDbi: 2.15 },
-//   TBEAM:     { name: 'T-Beam',            txDbm: 20, gainDbi: 2.15 },
-//   RAK4631:   { name: 'RAK4631',           txDbm: 22, gainDbi: 2.15 },
-//   SENSECAP:  { name: 'SenseCAP T1000-E',  txDbm: 20, gainDbi: 2.15 },
-//   GENERIC:   { name: 'Generic / Custom',  txDbm: 17, gainDbi: 2.15 },
-// };
+export interface HardwareSpec {
+  name:             string;
+  txDbm:            number;   // default TX power
+  maxTxDbm:         number;   // hardware ceiling
+  gainDbi:          number;   // default antenna gain
+  externalAntenna:  boolean;  // can user attach external antenna?
+  notes:            string;
+}
 
-export const HW_SPECS = {
+export const HW_SPECS: Record<HardwareModel, HardwareSpec> = {
   HELTEC_V3: {
     name: 'Heltec V3',
-    txDbm: 20, maxTxDbm: 20,
-    gainDbi: 2.15,
+    txDbm: 20, maxTxDbm: 20, gainDbi: 2.15,
     externalAntenna: true,
-    notes: 'SMA connector, supports external antenna'
+    notes: 'SMA connector — supports external antenna',
   },
-  RAK4631: {
-    name: 'RAK4631',
-    txDbm: 22, maxTxDbm: 22,
-    gainDbi: 2.15,
+  HELTEC_V2: {
+    name: 'Heltec V2',
+    txDbm: 20, maxTxDbm: 20, gainDbi: 2.15,
     externalAntenna: true,
-    notes: 'IPEX connector, supports external antenna'
-  },
-  SENSECAP: {
-    name: 'SenseCAP T1000-E',
-    txDbm: 20, maxTxDbm: 20,
-    gainDbi: 1.5,
-    externalAntenna: false,
-    notes: 'Internal PCB antenna only, gain fixed ~1.5 dBi'
+    notes: 'SMA connector — supports external antenna',
   },
   TBEAM: {
     name: 'T-Beam',
-    txDbm: 20, maxTxDbm: 20,
-    gainDbi: 2.15,
+    txDbm: 20, maxTxDbm: 20, gainDbi: 2.15,
     externalAntenna: true,
-    notes: 'SMA connector, supports external antenna'
+    notes: 'SMA connector — supports external antenna',
+  },
+  TBEAM_S3: {
+    name: 'T-Beam S3',
+    txDbm: 22, maxTxDbm: 22, gainDbi: 2.15,
+    externalAntenna: true,
+    notes: 'SMA connector — supports external antenna',
+  },
+  RAK4631: {
+    name: 'RAK4631',
+    txDbm: 22, maxTxDbm: 22, gainDbi: 2.15,
+    externalAntenna: true,
+    notes: 'IPEX/SMA connector — supports external antenna',
+  },
+  SENSECAP: {
+    name: 'SenseCAP T1000-E',
+    txDbm: 20, maxTxDbm: 20, gainDbi: 1.5,
+    externalAntenna: false,
+    notes: 'Internal PCB antenna only — gain is fixed by hardware, cannot attach external antenna',
   },
   GENERIC: {
     name: 'Generic / Custom',
-    txDbm: 17, maxTxDbm: 30,
-    gainDbi: 2.15,
+    txDbm: 17, maxTxDbm: 30, gainDbi: 2.15,
     externalAntenna: true,
-    notes: 'Fully user-defined'
+    notes: 'Fully user-defined — no hardware constraints applied',
   },
-}
+};
 
 export type LoraPreset =
   | 'SHORT_FAST'
@@ -57,14 +65,14 @@ export type LoraPreset =
   | 'VERY_LONG_SLOW';
 
 export const LORA_PRESETS: Record<LoraPreset, { name: string; rxSensDbm: number; note: string }> = {
-  SHORT_FAST:      { name: 'ShortFast',      rxSensDbm: -117, note: 'SF7  / BW500 — fastest, shortest range'   },
-  SHORT_SLOW:      { name: 'ShortSlow',      rxSensDbm: -120, note: 'SF8  / BW250'                             },
-  MEDIUM_FAST:     { name: 'MediumFast',     rxSensDbm: -123, note: 'SF9  / BW250'                             },
-  MEDIUM_SLOW:     { name: 'MediumSlow',     rxSensDbm: -126, note: 'SF10 / BW250'                             },
-  LONG_FAST:       { name: 'LongFast',       rxSensDbm: -134, note: 'SF11 / BW250 — Meshtastic default'        },
-  LONG_MODERATE:   { name: 'LongModerate',   rxSensDbm: -136, note: 'SF11 / BW125'                             },
-  LONG_SLOW:       { name: 'LongSlow',       rxSensDbm: -137, note: 'SF12 / BW125 — long range, slow'          },
-  VERY_LONG_SLOW:  { name: 'VeryLongSlow',   rxSensDbm: -140, note: 'SF12 / BW62  — maximum range'             },
+  SHORT_FAST:     { name: 'ShortFast',     rxSensDbm: -117, note: 'SF7  / BW500 — fastest, shortest range'    },
+  SHORT_SLOW:     { name: 'ShortSlow',     rxSensDbm: -120, note: 'SF8  / BW250'                              },
+  MEDIUM_FAST:    { name: 'MediumFast',    rxSensDbm: -123, note: 'SF9  / BW250'                              },
+  MEDIUM_SLOW:    { name: 'MediumSlow',    rxSensDbm: -126, note: 'SF10 / BW250'                              },
+  LONG_FAST:      { name: 'LongFast',      rxSensDbm: -134, note: 'SF11 / BW250 — Meshtastic default'         },
+  LONG_MODERATE:  { name: 'LongModerate',  rxSensDbm: -136, note: 'SF11 / BW125'                              },
+  LONG_SLOW:      { name: 'LongSlow',      rxSensDbm: -137, note: 'SF12 / BW125 — long range, slow'           },
+  VERY_LONG_SLOW: { name: 'VeryLongSlow',  rxSensDbm: -140, note: 'SF12 / BW62  — maximum range, very slow'   },
 };
 
 export interface MeshNode {
@@ -77,10 +85,8 @@ export interface MeshNode {
   hw:          HardwareModel;
   planned:     boolean;
   color:       string;
-  // Radio config — editable per node
-  freqMhz:    number;         // 915 US | 868 EU | 433 Asia
+  freqMhz:    number;
   loraPreset: LoraPreset;
-  txDbm:      number;         // initialized from HW_SPECS, user-editable
-  maxTxDbm:   number;         // initialized from HW_SPECS
-  gainDbi:    number;         // antenna gain, user-editable
+  txDbm:      number;
+  gainDbi:    number;
 }
